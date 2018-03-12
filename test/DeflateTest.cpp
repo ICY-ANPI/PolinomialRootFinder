@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE SqrTests
+#define BOOST_TEST_MODULE PolynomialRootFinder
 #include <boost/test/unit_test.hpp>
 
 #include "Deflate.hpp"
