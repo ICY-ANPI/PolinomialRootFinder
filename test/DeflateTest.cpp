@@ -5,7 +5,40 @@
 #include "Deflate2.hpp"
 #include "Example.hpp"
 
+#include <boost/math/tools/polynomial.hpp>
 
+#include <boost/array.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/assert.hpp>
+
+#include <iostream>
+#include <stdexcept>
+#include <cmath>
+#include <string>
+#include <utility>
+
+using std::string;
+using std::exception;
+using std::cout;
+using std::endl;
+using std::abs;
+using std::pair;
+
+
+using namespace boost::math;
+using namespace boost::math::tools; // for polynomial
+using boost::lexical_cast;
+
+
+
+BOOST_AUTO_TEST_CASE(polynomialTestCase){
+  boost::array<double, 4> const d3a = {{10, -6, -4, 3}};
+  polynomial<double> const a(d3a.begin(), d3a.end());
+  polynomial<double> const b{{10,14}};
+  cout << "Example: Polynomial" << endl;
+  cout << "a = " << a << "\n\n";
+
+}
 
 BOOST_AUTO_TEST_CASE(ExampleCase)
 {
