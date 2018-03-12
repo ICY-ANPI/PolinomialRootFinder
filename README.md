@@ -13,12 +13,10 @@ adicionalmente usted deberá descomprimir el contenido e ingresar en la carpeta 
 una vez allí deberá instalar cierta parte del contenido para ello utilice lo siguientes comandos:
 
 ```bash
-sudo apt-get --purge remove libboost-all-dev>
-	```
+sudo apt-get --purge remove libboost-all-dev
 ./bootstrap.sh --with-libraries=atomic,date_time,exception,filesystem,iostreams,locale,program_options,regex,signals,system,test,thread,timer,log
-
 sudo ./b2 install
-
+```
 
 ## Compilación:
 
