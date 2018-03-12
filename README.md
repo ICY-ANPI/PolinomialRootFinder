@@ -41,7 +41,7 @@ Para usar el programa que lee la entrada del usuario utilice el siguiente comand
 ```console
 foo@bar:~$ ./user_input
 ```
-- ###Borrar compilado
+- ### Borrar compilado
 para borrar todo rastro  de archivos compilados utilice el siguiente comando:
 ```console
 foo@bar:~$ ./execute_order_66
