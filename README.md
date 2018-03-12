@@ -25,6 +25,6 @@ una vez allí deberá instalar cierta parte del contenido para ello utilice lo s
 ## Ejecución:
 
 
-	* ### Test
-	* ### Benchmark
-	* ### User Input
+	### * Test
+	### * Benchmark
+	### * User Input
