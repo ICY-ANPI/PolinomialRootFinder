@@ -8,6 +8,6 @@
 BOOST_AUTO_TEST_CASE(ChancherSandbox)
 {
 	//Insert your code here!
-	//Inserte su codigo de pruebas en este archivo Chancher
+	//Inserte su codigo de pruebas en este archivo Chancher MFNB!
 
 }
