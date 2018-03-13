@@ -38,8 +38,9 @@ polynomial<T> deflate(const polynomial<T> &poly, const T& root, polynomial<T> &r
 
 template <typename T>
 polynomial<T> deflate(const polynomial<T> &poly, const T& root, polynomial<T> &residuo){
-	polynomial<T> a;
-	return a;
+	polynomial<T> divider{{root,1}};
+	residuo = poly%divider;
+	return poly/divider;
 }
 
 

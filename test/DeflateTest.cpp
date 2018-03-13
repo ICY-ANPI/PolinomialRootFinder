@@ -4,6 +4,7 @@
 #include "Deflate.hpp"
 #include "Deflate2.hpp"
 #include "Example.hpp"
+#include "PrintPolynomial.hpp"
 
 #include <boost/math/tools/polynomial.hpp>
 
@@ -32,12 +33,15 @@ using boost::lexical_cast;
 
 
 BOOST_AUTO_TEST_CASE(polynomialTestCase){
-  boost::array<double, 4> const d3a = {{10, -6, -4, 3}};
+  boost::array<double, 3> const d3a = {{6, 5, 1}};
   polynomial<double> const a(d3a.begin(), d3a.end());
-  polynomial<double> const b{{10,14}};
-  cout << "Example: Polynomial" << endl;
-  cout << "a = " << a << "\n\n";
-
+  polynomial<double> const b{{2,1}};
+  polynomial<double> residuo{{5}};
+  polynomial<double> resultado = deflate<double>(a,2,residuo);
+  cout << "El resultado de divir " << formula_format(a) << " por " << formula_format(b) << " es: ";
+  cout << formula_format(resultado) << std::endl;
+  cout << "Y el residuo es: ";
+  cout << formula_format(residuo) << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(ExampleCase)
