@@ -2,3 +2,6 @@ build/*
 file_creator
 .project
 test/Sandbox.cpp
+/Debug/
+.cproject
+.settings/*
