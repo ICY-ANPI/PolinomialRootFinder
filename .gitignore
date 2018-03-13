@@ -1,4 +1,6 @@
 build/*
 file_creator
 .project
-test/*Sandbox.cpp
+test/CristianSandbox.cpp
+test/IreneSandbox.cpp
+test/ChancherSandbox.cpp
