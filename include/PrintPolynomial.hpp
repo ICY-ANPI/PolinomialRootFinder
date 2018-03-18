@@ -98,3 +98,8 @@ string formula_format(polynomial<T> const &a)
   return result;
 } // string formula_format(polynomial<T> const &a)
 
+template <typename T>
+void print_polinomial(polynomial<T> const &a)
+{
+	cout << formula_format(a) << std::endl;
+}
