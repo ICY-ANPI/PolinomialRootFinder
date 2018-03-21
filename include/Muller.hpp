@@ -1,8 +1,7 @@
 #ifndef MULLER_H
 #define MULLER_H
 
-//#include <boost/math/tools/polynomial.hpp>
-#include "polynomial.hpp"
+#include <boost/math/tools/polynomial.hpp>
 #include <boost/array.hpp>
 //#include <cmath>
 #include <vector>
@@ -15,16 +14,26 @@
 #include "ComplexSupport.hpp"
 
 using std::abs;
-//using namespace boost::math;
-//using namespace boost::math::tools; // para polynomial
+using namespace boost::math;
+using namespace boost::math::tools; // para polynomial
 using std::cout;
 using std::endl;
 using std::complex;
-using anpi::polynomial;
+//using anpi::polynomial;
 
 template <class T>
+T desplamiento(T a, T b, T c , T solucion) {
+	return ;
+}
+template <class T>
 typename std::enable_if<is_tt<std::complex, T>::value>::type siguienteRaiz(T a, T b, T c , T xActual, T &xSiguiente, T discriminante) {
-	throw anpi::Exception("unimplemented method");
+	//throw anpi::Exception("unimplemented method");
+	T temp = xActual - (T(2)*c)/(b + std::sqrt(discriminante));
+	T temp2 = xActual - (T(2)*c)/(b - std::sqrt(discriminante));
+	if(abs(a-temp) + abs(b-temp) + abs(c-temp) < abs(a-temp2) + abs(b-temp2) + abs(c-temp2))
+		xSiguiente = temp;
+	else
+		xSiguiente = temp2;
 }
 
 template <class T>
@@ -35,6 +44,8 @@ typename std::enable_if<!is_tt<std::complex, T>::value>::type siguienteRaiz(T a,
 		throw anpi::Exception("Raiz compleja encontrada");
 }
 
+
+
 template <typename T>
 class Muller{
 	//Verifica la cantidad de iteracones que realiza el algorimo de Muller para encontrar
@@ -42,8 +53,9 @@ class Muller{
 	int convergencia;
 	bool pulidoDeRaices;
 	Parabola<T> parabola;
-	T evaluarParabola(T xi);	
-	//xi, xi_n = x_(i-n)
+	T evaluarParabola(T xi);
+	//void regulaFalsi();
+	//xi, xi_n = xi_(n-1)
 	void configurarParabola(polynomial<T> poly, T xi,T xi_1,T xi_2);
 	T mullerStep(polynomial<T> poly, T xActual,T xPrevio,T xTransPrevio);
 public:
@@ -57,6 +69,34 @@ public:
 	}
 	~Muller(){};
 };
+
+
+
+
+
+
+
+
+
+template <class T>
+typename std::enable_if<is_tt<std::complex,  T>::value>::type regulaFalsi(T inicialValue, T &x0, T &x1, T &x2, polynomial<T> poly) {
+	throw anpi::Exception("unimplemented method Regula Falsi complex");
+	x2 = poly.evaluate(initialValue);
+	
+}
+
+template <class T>
+typename std::enable_if<!is_tt<std::complex, T>::value>::type regulaFalsi(T initialValue, T &x0, T &x1, T &x2, polynomial<T> poly) {
+	throw anpi::Exception("unimplemented method Regula Falsi real");
+	
+}
+
+
+
+
+
+
+
 
 
 template <typename T>
@@ -83,7 +123,7 @@ T f(T x){
 template <typename T>
 std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1, T x0){
 	std::vector<T> v;
-	
+	regulaFalsi(x0);
 	//Raices
 	T xSiguiente, xActual(x2),xPrevio(x1), xTransPrevio(x0);
 	//Diferencias en las raices de prueba
@@ -99,7 +139,8 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 	T error = errorSoportado + T(1);
 	T discriminante;
 	/*
-	 * Se debe buscar las raices aqui
+	 * Se debe los iimites del metodo de muller aqui
+	 * x0, x1, x2
 	 */
 
 	//seccion de riesgo en el codigo, comparancion del error y el error soportado
@@ -149,7 +190,6 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 		xTransPrevio = xPrevio;
 		xPrevio = xActual;
 		xActual = xSiguiente;
-		//error = poly.evaluate(xActual);
 		error = c;
 		convergencia++;
 	}
@@ -163,22 +203,12 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 }
 
 template <typename T>
-void mullerTest(){
+void mullerTest(polynomial< T > p){
 	Muller< T > muller;
 	//polynomial<double > p{{-6000,1100,-60,1}};
 	//print_polinomial(p);
 	//muller.muller(p,0.001,5,18,-30);
-        size_t size = 3;
-        std::vector< T > myvect(size);
-        myvect[0] = T(6.0f,0.0f) ;
-        myvect[1] = T(-5.0f,0.0f);
-        myvect[2] = T(1.0f,0.0f);
-//      boost::math::tools::polynomial< std::complex<double> > p(myvect[0]);
-//      boost::math::tools::polynomial< std::complex<double> > p2(myvect[1]);
-        polynomial< T > p(myvect);
-        p.printExpression();
-        //cout << p.evaluate(T(2.0)) << endl;
-	//print_polin mial(p);
+    //polynomial< T > p{{6,-5,1}};
 	try{
 		muller.muller(p,T(0.001),T((-30+2.8)/2.0),T(2.8),T(-30));
 	}
