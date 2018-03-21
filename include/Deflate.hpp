@@ -38,9 +38,21 @@ polynomial<T> deflate(const polynomial<T> &poly, const T& root, polynomial<T> &r
 
 template <typename T>
 polynomial<T> deflate(const polynomial<T> &poly, const T& root, polynomial<T> &residuo){
-	polynomial<T> divider{{root,1}};
-	residuo = poly%divider;
-	return poly/divider;
+	polynomial<T> cociente = poly;
+	residuo = polynomial<T>(poly);
+
+	for (int i = 0; i < poly.size(); i++) {
+		cociente[i] = 0;
+		residuo[i] = 0;
+	}
+	for (int x = poly.size()-2; x >= 0 ; x--) {
+		cout << "Poly x: " << poly[x]<<"\n";
+		cociente[x] = poly[x+1] + cociente[x+1] * root;
+		cout << "Cociente: " << cociente[x] <<"\n";
+		cout << "Residuo: " << residuo[x] <<"\n";
+	}
+	residuo[0] = poly[0] + cociente[0]*root;
+	return cociente;
 }
 
 

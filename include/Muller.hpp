@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <type_traits>
 #include "ComplexSupport.hpp"
+#include "Deflate.hpp"
 
 using std::abs;
 using namespace boost::math;
@@ -28,18 +29,34 @@ T desplamiento(T a, T b, T c , T solucion) {
 template <class T>
 typename std::enable_if<is_tt<std::complex, T>::value>::type siguienteRaiz(T a, T b, T c , T xActual, T &xSiguiente, T discriminante) {
 	//throw anpi::Exception("unimplemented method");
+	if (b + std::sqrt(discriminante) == T(0) && b - std::sqrt(discriminante) == T (0))
+		throw anpi::Exception("Division por cero");
+
 	T temp = xActual - (T(2)*c)/(b + std::sqrt(discriminante));
 	T temp2 = xActual - (T(2)*c)/(b - std::sqrt(discriminante));
-	if(abs(a-temp) + abs(b-temp) + abs(c-temp) < abs(a-temp2) + abs(b-temp2) + abs(c-temp2))
-		xSiguiente = temp;
-	else
+	if(b + std::sqrt(discriminante) == T(0)){
 		xSiguiente = temp2;
+		return;
+	}
+	else if (b - std::sqrt(discriminante) == T(0)){
+		xSiguiente = temp;
+		return;
+	}
+	else{
+		if(abs(a-temp) + abs(b-temp) + abs(c-temp) < abs(a-temp2) + abs(b-temp2) + abs(c-temp2))
+			xSiguiente = temp;
+		else
+			xSiguiente = temp2;
+	}
 }
 
 template <class T>
 typename std::enable_if<!is_tt<std::complex, T>::value>::type siguienteRaiz(T a, T b, T c, T xActual, T &xSiguiente, T discriminante) {
-	if (discriminante > 0)
+	if (discriminante > 0){
+		if(b + std::sqrt(discriminante)*((b > T(0))?T(1):T(-1)) == 0)
+			throw anpi::Exception("Division por cero");
 		xSiguiente = xActual - (T(2)*c)/(b + std::sqrt(discriminante)*((b > T(0))?T(1):T(-1)));
+	}
 	else
 		throw anpi::Exception("Raiz compleja encontrada");
 }
@@ -81,14 +98,23 @@ public:
 template <class T>
 typename std::enable_if<is_tt<std::complex,  T>::value>::type regulaFalsi(T inicialValue, T &x0, T &x1, T &x2, polynomial<T> poly) {
 	throw anpi::Exception("unimplemented method Regula Falsi complex");
-	x2 = poly.evaluate(initialValue);
-	
+	x2 = poly.evaluate(inicialValue);
+
+	//condicion de bolzano
+	//existe una raiz si los extremos son ceros
+	while (poly.evaluate(x1)*poly.evaluate(x2) > 0) {
+		x0 = (poly.evaluate(x1)-poly.evaluate(x2))/(x1-x2);
+		x1 = x2;
+		x2 = x0;
+	}
+	x0 = (poly.evaluate(x1)-poly.evaluate(x2))/(x1-x2);
+
 }
 
 template <class T>
 typename std::enable_if<!is_tt<std::complex, T>::value>::type regulaFalsi(T initialValue, T &x0, T &x1, T &x2, polynomial<T> poly) {
 	throw anpi::Exception("unimplemented method Regula Falsi real");
-	
+
 }
 
 
@@ -122,8 +148,9 @@ T f(T x){
  */
 template <typename T>
 std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1, T x0){
-	std::vector<T> v;
-	regulaFalsi(x0);
+	std::vector<T> v(poly.size()-1);
+	cout << "Muller is working" << endl;
+	//regulaFalsi(x0);
 	//Raices
 	T xSiguiente, xActual(x2),xPrevio(x1), xTransPrevio(x0);
 	//Diferencias en las raices de prueba
@@ -135,69 +162,61 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 	//f(x) = a*x^2 + b*x + c
 	T a,b,c;
 
-	//Se usara la definicion de error absoluto
-	T error = errorSoportado + T(1);
+	polynomial<T> residuo;
+
+
+	T error;
 	T discriminante;
-	/*
-	 * Se debe los iimites del metodo de muller aqui
-	 * x0, x1, x2
-	 */
+	 for (int index = v.size()-1; index >= 0; index--) {
+	 	/* code */
 
-	//seccion de riesgo en el codigo, comparancion del error y el error soportado
-	while (std::abs(error) > std::abs(errorSoportado)&& convergencia < 100){
-		//Definicion de los h's
+		//Se usara la definicion de error absoluto
+		error = errorSoportado + T(1);
+		xActual=x2;
+		xPrevio = x1;
+		xTransPrevio = x0;
+		while (std::abs(error) > std::abs(errorSoportado)&& convergencia < 150){
+			//Definicion de los h's
 
-		//set h1
-		h2 = xActual - xPrevio;
-		//set h2
-		h1= xPrevio - xTransPrevio;
+			//set h1
+			h2 = xActual - xPrevio;
+			//set h2
+			h1= xPrevio - xTransPrevio;
 
-		//Definicion de los delta's
-		Delta1 = (poly.evaluate(xPrevio) - poly.evaluate(xTransPrevio))/h1;
-		Delta2 = (poly.evaluate(xActual) - poly.evaluate(xPrevio))/h2;
-		//Delta1 = (f(xPrevio) - f(xTransPrevio))/h1;
-		//Delta2 = (f(xActual) - f(xPrevio))/h2;
-		//Definiendo los valores de la funcion cuadratica
-		a = (Delta2-Delta1)/(h2-h1);
-		b = a*h2+Delta2;
-		c = poly.evaluate(xActual);
-		//c = f(xActual);
-		parabola = {a,b,c};
+			//Definicion de los delta's
+			Delta1 = (poly.evaluate(xPrevio) - poly.evaluate(xTransPrevio))/h1;
+			Delta2 = (poly.evaluate(xActual) - poly.evaluate(xPrevio))/h2;
+			//Delta1 = (f(xPrevio) - f(xTransPrevio))/h1;
+			//Delta2 = (f(xActual) - f(xPrevio))/h2;
+			//Definiendo los valores de la funcion cuadratica
+			a = (Delta2-Delta1)/(h2-h1);
+			b = a*h2+Delta2;
+			c = poly.evaluate(xActual);
+			//c = f(xActual);
+			parabola = {a,b,c};
+
+			//Calculo previo del discriminante
+			discriminante = b*b-T(4)*a*c;
+			//Funcion que elije en tiempo de compilacion el tipo de variable.
+			//sea raiz compleja o sea raiz real.
+			siguienteRaiz(a, b, c, xActual, xSiguiente,discriminante);
+
+			//actualizacion de los nuevos valores
+			xTransPrevio = xPrevio;
+			xPrevio = xActual;
+			xActual = xSiguiente;
+			error = c;
+			convergencia++;
+		}
 		/*
-		cout << "=============================================================================================" << endl;
-		cout << "Iteracion: " << convergencia << ", valor x: " << xActual << " y el valor de f(x) es " << c << endl;
-		cout << "x" << convergencia+2 << "= " << xActual
-			 << " x"<< convergencia+1 << "= " << xPrevio
-			 << " x"<< convergencia << "= " << xTransPrevio << endl;
-		cout << "Discriminante: " << b*b-T(4)*a*c << ", a = " << a << ", b = " << b << ", c = " << c << endl;
-		cout << "Solucion 1: " << xActual -(T(2)*c)/(b+std::sqrt(b*b-T(4)*a*c))<< endl
-			 << "Solucion 2: " << xActual -(T(2)*c)/(b-std::sqrt(b*b-T(4)*a*c))<< endl;
-		cout << "=============================================================================================" << endl<< endl;
-		*/
-		//cout << "x" << convergencia << " = ";
-		//my_print(xTransPrevio);
-		discriminante = b*b-T(4)*a*c;
-
-		//seccion de riesgo en el codigo
-		/*
-		if (discriminante > 0)
-			xSiguiente = xActual - (T(2)*c)/(b + std::sqrt(discriminante)*((b > T(0))?T(1):T(-1)));
-		else
-			throw anpi::Exception("Raiz compleja encontrada");
-			*/
-
-		siguienteRaiz(a, b, c, xActual, xSiguiente,discriminante);
-		xTransPrevio = xPrevio;
-		xPrevio = xActual;
-		xActual = xSiguiente;
-		error = c;
-		convergencia++;
-	}
-
-	/*
-	 * Se debe hacer deflación aquí.
-	 */
-	cout << "El valor de x Actual es: " << xActual << endl;
+		 * Se debe hacer deflación aquí.
+		 */
+		 poly = deflate<T>(poly,xActual,residuo);
+		cout << "Raiz encontrada: ";
+		printCoefficient(xActual);
+		cout << endl;
+		v[index] = xActual;
+	 }
 
 	return v;
 }
@@ -205,12 +224,14 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 template <typename T>
 void mullerTest(polynomial< T > p){
 	Muller< T > muller;
-	//polynomial<double > p{{-6000,1100,-60,1}};
-	//print_polinomial(p);
-	//muller.muller(p,0.001,5,18,-30);
-    //polynomial< T > p{{6,-5,1}};
 	try{
-		muller.muller(p,T(0.001),T((-30+2.8)/2.0),T(2.8),T(-30));
+		std::vector<T> v =  muller.muller(p,T(0.00001),T(0),T(30),T(-30));
+		for (int i = 0; i < v.size(); i++) {
+			/* code */
+			cout << "Raiz encontrada: ";
+			printCoefficient(v[i]);
+			cout << endl;
+		}
 	}
 	catch(anpi::Exception &e){
 		std::cout << e.what() << std::endl;
