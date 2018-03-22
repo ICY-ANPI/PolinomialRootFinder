@@ -26,6 +26,7 @@
 #include <cmath>
 #include <string>
 #include <utility>
+#include "ComplexSupport.hpp"
 
 //[polynomial_arithmetic_1
 /*`and some using statements are convenient:
@@ -102,4 +103,16 @@ template <typename T>
 void print_polinomial(polynomial<T> const &a)
 {
 	cout << formula_format(a) << std::endl;
+}
+
+
+template <typename T>
+void printExpression(polynomial<T> const &a){
+	// agregar logica para  verificar limites de los coeficientes
+	for(int x = a.size()-1; x > 0; x--){
+			printCoefficient(a[x]);
+			cout << "*x^" << x << " + ";
+	}
+	printCoefficient(a[0]);
+	cout << endl;
 }

@@ -10,17 +10,23 @@
 #include <iostream>
 #include <complex>
 #include <stdbool.h>
+
+#include <cstdlib>
+#include <ctime>
+
 #include <type_traits>
 #include "ComplexSupport.hpp"
 #include "Deflate.hpp"
 
-using std::abs;
 using namespace boost::math;
 using namespace boost::math::tools; // para polynomial
-using std::cout;
-using std::endl;
+//using namespace std;
 using std::complex;
-//using anpi::polynomial;
+using std::cout;
+using std::abs;
+using std::endl;
+//int RANGE_RANDOM_LIMIT_ANPI = 150;
+
 
 template <class T>
 T desplamiento(T a, T b, T c , T solucion) {
@@ -34,6 +40,8 @@ typename std::enable_if<is_tt<std::complex, T>::value>::type siguienteRaiz(T a, 
 
 	T temp = xActual - (T(2)*c)/(b + std::sqrt(discriminante));
 	T temp2 = xActual - (T(2)*c)/(b - std::sqrt(discriminante));
+	//este if se realiza debido a que raices que son casi reales entran aqui
+	//su componente imaginaria es igual a cero.
 	if(b + std::sqrt(discriminante) == T(0)){
 		xSiguiente = temp2;
 		return;
@@ -69,18 +77,11 @@ class Muller{
 	//las raices del polinomio;
 	int convergencia;
 	bool pulidoDeRaices;
-	Parabola<T> parabola;
 	T evaluarParabola(T xi);
-	//void regulaFalsi();
-	//xi, xi_n = xi_(n-1)
-	void configurarParabola(polynomial<T> poly, T xi,T xi_1,T xi_2);
 	T mullerStep(polynomial<T> poly, T xActual,T xPrevio,T xTransPrevio);
 public:
-	Muller():convergencia(0),pulidoDeRaices(false),parabola(0,0,0){
-		//pulidoDeRaices = true;
-	}
+	Muller():convergencia(0),pulidoDeRaices(false){}
 	std::vector<T> muller(polynomial<T> poly, T errorSoportado,T a, T b, T c);
-
 	int getConvergencia() const {
 		return convergencia;
 	}
@@ -88,52 +89,59 @@ public:
 };
 
 
+template <class T>
+typename std::enable_if<is_tt<std::complex,  T>::value>::type randomRoot(T &x, int limit) {
+	srand(time(0));
+	T sign = T((rand()%2 == 1)?1:-1,(rand()%2 == 1)?1:-1);
+	x =  sign*T(rand()%limit,rand()%limit);
+	//cout << x << endl;
+}
 
-
-
-
+template <class T>
+typename std::enable_if<!is_tt<std::complex, T>::value>::type randomRoot(T &x, int limit) {
+	srand(time(0));
+	static std::default_random_engine e{};
+	static std::uniform_int_distribution<int> d{(-1*limit), (limit)};
+	x = T(d(e));
+}
 
 
 
 template <class T>
-typename std::enable_if<is_tt<std::complex,  T>::value>::type regulaFalsi(T inicialValue, T &x0, T &x1, T &x2, polynomial<T> poly) {
-	throw anpi::Exception("unimplemented method Regula Falsi complex");
-	x2 = poly.evaluate(inicialValue);
+typename std::enable_if<is_tt<std::complex,  T>::value>::type intervalo(T inicialValue, T &x0, T &x1, T &x2, polynomial<T> poly, int limit) {
+	//throw anpi::Exception("unimplemented method Regula Falsi complex");
 
+	x2 = inicialValue;
+	T y = poly.evaluate(x2);
+	T y2 =poly.evaluate(x1);
 	//condicion de bolzano
 	//existe una raiz si los extremos son ceros
-	while (poly.evaluate(x1)*poly.evaluate(x2) > 0) {
-		x0 = (poly.evaluate(x1)-poly.evaluate(x2))/(x1-x2);
-		x1 = x2;
-		x2 = x0;
+	while (y.real()*y2.real() > T(0).real()) {
+		randomRoot<T>(x1, limit);
+		y2 = poly.evaluate(x1);
 	}
-	x0 = (poly.evaluate(x1)-poly.evaluate(x2))/(x1-x2);
+
+	x0 = x1/T(2);
 
 }
 
 template <class T>
-typename std::enable_if<!is_tt<std::complex, T>::value>::type regulaFalsi(T initialValue, T &x0, T &x1, T &x2, polynomial<T> poly) {
-	throw anpi::Exception("unimplemented method Regula Falsi real");
-
+typename std::enable_if<!is_tt<std::complex, T>::value>::type intervalo(T inicialValue, T &x0, T &x1, T &x2, polynomial<T> poly, int limit) {
+	//throw anpi::Exception("unimplemented method Regula Falsi real");
+	x2 = inicialValue;
+	T y = poly.evaluate(x2);
+	T y2 =poly.evaluate(x1);
+	//condicion de bolzano
+	//existe una raiz si los extremos son ceros
+	while (y*y2 > T(0)) {
+		randomRoot<T>(x1, limit);
+		y2 = poly.evaluate(x1);
+		//cout << x1 << endl;
+	}
+	x0 = x1/T(2);
 }
 
 
-
-
-
-
-
-
-
-template <typename T>
-T Muller<T>::evaluarParabola(T xi){
-
-}
-
-template <typename T>
-void Muller<T>::configurarParabola(polynomial<T> poly, T xActual,T xPrevio,T xTransPrevio){
-
-}
 
 template <typename T>
 T f(T x){
@@ -142,15 +150,15 @@ T f(T x){
 }
 
 
-
-/**
- *
- */
 template <typename T>
 std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1, T x0){
 	std::vector<T> v(poly.size()-1);
-	cout << "Muller is working" << endl;
-	//regulaFalsi(x0);
+	convergencia = 0;
+	polynomial<T> poly2(poly);
+	//cout << "Muller is working" << endl;
+	//cout << "=================" << endl;
+
+
 	//Raices
 	T xSiguiente, xActual(x2),xPrevio(x1), xTransPrevio(x0);
 	//Diferencias en las raices de prueba
@@ -163,37 +171,31 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 	T a,b,c;
 
 	polynomial<T> residuo;
-
-
 	T error;
 	T discriminante;
-	 for (int index = v.size()-1; index >= 0; index--) {
-	 	/* code */
-
+	for (int index = v.size()-1; index >= 0; index--) {
+		/* code */
 		//Se usara la definicion de error absoluto
-		error = errorSoportado + T(1);
-		xActual=x2;
-		xPrevio = x1;
-		xTransPrevio = x0;
-		while (std::abs(error) > std::abs(errorSoportado)&& convergencia < 150){
-			//Definicion de los h's
 
+		error = errorSoportado + T(1);
+		xActual=x2 = T(150);
+		xPrevio = x1 = x2/T(2);
+		xTransPrevio = x0 = T(-150);
+		while (convergencia < 150*v.size()){
+			//Definicion de los h's
 			//set h1
 			h2 = xActual - xPrevio;
 			//set h2
 			h1= xPrevio - xTransPrevio;
 
 			//Definicion de los delta's
-			Delta1 = (poly.evaluate(xPrevio) - poly.evaluate(xTransPrevio))/h1;
-			Delta2 = (poly.evaluate(xActual) - poly.evaluate(xPrevio))/h2;
-			//Delta1 = (f(xPrevio) - f(xTransPrevio))/h1;
-			//Delta2 = (f(xActual) - f(xPrevio))/h2;
+			Delta1 = (poly2.evaluate(xPrevio) - poly2.evaluate(xTransPrevio))/h1;
+			Delta2 = (poly2.evaluate(xActual) - poly2.evaluate(xPrevio))/h2;
 			//Definiendo los valores de la funcion cuadratica
 			a = (Delta2-Delta1)/(h2-h1);
 			b = a*h2+Delta2;
-			c = poly.evaluate(xActual);
-			//c = f(xActual);
-			parabola = {a,b,c};
+			c = poly2.evaluate(xActual);
+			if(std::abs(c*T(10)) < std::abs(errorSoportado))break;
 
 			//Calculo previo del discriminante
 			discriminante = b*b-T(4)*a*c;
@@ -208,35 +210,27 @@ std::vector<T> Muller<T>::muller(polynomial<T> poly, T errorSoportado,T x2, T x1
 			error = c;
 			convergencia++;
 		}
-		/*
-		 * Se debe hacer deflación aquí.
-		 */
-		 poly = deflate<T>(poly,xActual,residuo);
-		cout << "Raiz encontrada: ";
-		printCoefficient(xActual);
-		cout << endl;
+		poly2 = deflate<T>(poly2,xActual,residuo);
 		v[index] = xActual;
-	 }
+
+	}
 
 	return v;
 }
 
 template <typename T>
-void mullerTest(polynomial< T > p){
+std::vector<T> mullerTest(polynomial< T > p, T presicion, int &convergencia){
 	Muller< T > muller;
+	std::vector<T> v;
 	try{
-		std::vector<T> v =  muller.muller(p,T(0.00001),T(0),T(30),T(-30));
-		for (int i = 0; i < v.size(); i++) {
-			/* code */
-			cout << "Raiz encontrada: ";
-			printCoefficient(v[i]);
-			cout << endl;
-		}
+		v =  muller.muller(p,presicion,T(0),T(30),T(-30));
+		convergencia = muller.getConvergencia();
+		return v;
 	}
 	catch(anpi::Exception &e){
 		std::cout << e.what() << std::endl;
 	}
-	return;
+	return v;
 }
 
 

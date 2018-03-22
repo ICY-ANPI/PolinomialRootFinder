@@ -32,75 +32,87 @@ using boost::lexical_cast;
 
 
 
-BOOST_AUTO_TEST_CASE(polynomialTestCase){
-  boost::array<double, 3> const d3a = {{6, 5, 1}};
-  polynomial<double> const a(d3a.begin(), d3a.end());
-  polynomial<double> const b{{2,1}};
-  polynomial<double> residuo{{5}};
-  polynomial<double> resultado = deflate<double>(a,2,residuo);
-  cout << "El resultado de divir " << formula_format(a) << " por " << formula_format(b) << " es: ";
-  cout << formula_format(resultado) << std::endl;
-  cout << "Y el residuo es: ";
-  cout << formula_format(residuo) << std::endl;
-}
+template <typename T>
+void evalDeflate(polynomial<T> p, std::vector<T>v){
+	polynomial<T> redux;
+	for(int x = 0; x < v.size();x++){
+		deflate<T>(p,v[x], redux);
+		bool isZero = true;
+		for (int i = 0; i < redux.size(); ++i) {
+			isZero = isZero && std::abs(redux[i]) < std::abs(T(0.01));
+		}
+		BOOST_ASSERT(isZero && "Residuo diferente de cero!");
+	}
 
-BOOST_AUTO_TEST_CASE(ExampleCase)
-{
-	//Insert your code here!
-	BOOST_CHECK_EQUAL(5, sqr(2));
 }
 
 
-BOOST_AUTO_TEST_CASE(ExampleCase2)
-{
-	//Insert your code here!
-	BOOST_CHECK_EQUAL(4, sqr(2));
+template <typename T>
+void evalDeflate2(polynomial<T> p, std::vector<std::complex<T> >v){
+	polynomial<T> redux;
+	for(int x = 0; x < v.size();x++){
+		deflate2<T>(p,v[x], redux);
+		bool isZero = true;
+		for (int i = 0; i < redux.size(); ++i) {
+			isZero = isZero && std::abs(redux[i]) < std::abs(T(0.01));
+		}
+		BOOST_ASSERT(isZero && "Residuo diferente de cero!");
+	}
+
+}
+
+
+template<typename T>
+void firstPol(polynomial<T> p){
+
+	std::vector<T> v{{33,-55,88}};
+	evalDeflate<T>(p,v);
+}
+
+template<typename T>
+void firstPol2(polynomial<T> p){
+
+	std::vector<std::complex<T>> v{{std::complex<T>(0,3),std::complex<T>(0,-3)}};
+	evalDeflate2<T>(p,v);
 }
 
 
 BOOST_AUTO_TEST_CASE(DeflateFloatTestNonPolished)
 {
 	//Insert your code here!
-}
+	polynomial< float > p{{float(159720),float(-3751),float(-66),float(1)}};
+	firstPol<float>(p);
 
-BOOST_AUTO_TEST_CASE(DeflateFloatTestPolished)
-{
-	//Insert your code here!
+	firstPol< std::complex<float> >(p);
+
 }
 
 BOOST_AUTO_TEST_CASE(DeflateDoubleTestNonPolished)
 {
 	//Insert your code here!
+	polynomial< double> p{{double(159720),double(-3751),double(-66),double(1)}};
+	firstPol<double>(p);
+
+	firstPol< std::complex<double> >(p);
 }
-
-
-BOOST_AUTO_TEST_CASE(DeflateDoubleTestPolished)
-{
-	//Insert your code here!
-}
-
-
-
 
 
 
 BOOST_AUTO_TEST_CASE(Deflate2FloatTestNonPolished)
 {
 	//Insert your code here!
-}
-
-BOOST_AUTO_TEST_CASE(Deflate2FloatTestPolished)
-{
-	//Insert your code here!
+	/*
+	polynomial< float> p{{float(9),float(0),float(1)}};
+	firstPol2<float>(p);
+	*/
 }
 
 BOOST_AUTO_TEST_CASE(Deflate2DoubleTestNonPolished)
 {
 	//Insert your code here!
+	/*
+	polynomial< double> p{{double(9),double(0),double(1)}};
+	firstPol2<double>(p);
+	*/
 }
 
-
-BOOST_AUTO_TEST_CASE(Deflate2DoubleTestPolished)
-{
-	//Insert your code here!
-}
